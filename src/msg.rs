@@ -1,4 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
+use cosmwasm_std::{Coin};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -9,6 +10,7 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     Increment {},
     Reset { count: i32 },
+    Generate { id: String, amount: Vec<Coin> }, // Added id field
 }
 
 #[cw_serde]

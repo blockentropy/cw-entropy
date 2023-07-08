@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{to_binary, Binary, BankMsg, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -34,13 +34,14 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Increment {} => execute::increment(deps),
         ExecuteMsg::Reset { count } => execute::reset(deps, info, count),
+        ExecuteMsg::Generate { id, amount } => execute::generate(deps, env, info, id, amount), // Handle Generate message
     }
 }
 
@@ -65,6 +66,40 @@ pub mod execute {
             Ok(state)
         })?;
         Ok(Response::new().add_attribute("action", "reset"))
+    }
+    pub fn generate(
+        deps: DepsMut,
+        _env: Env,
+        _info: MessageInfo,
+        id: String,
+        amount: Vec<Coin>,
+    ) -> Result<Response, ContractError> {
+        let mut total_luna: u128 = 0;
+        const MIN_AMOUNT: u128 = 1_000_000;
+
+        // Summing the total Luna in the amount
+        for coin in &amount {
+            if coin.denom == "uluna" {
+                total_luna += coin.amount.u128();
+            }
+        }
+
+        if total_luna < MIN_AMOUNT {
+            return Err(ContractError::Std(StdError::generic_err(
+                "Amount is less than the minimum required.",
+            )));
+        }
+
+        // Wallet address to send the amount to
+        let receiver = "terra1u3wxp2xahwg8jaxqh3pxnfmn03hlwkch2shn3e"; // specify the address
+
+        Ok(Response::new()
+            .add_message(BankMsg::Send {
+                to_address: receiver.into(),
+                amount,
+            })
+            .add_attribute("action", "generate")
+            .add_attribute("id", id))
     }
 }
 
