@@ -47,6 +47,7 @@ cw-storage-plus = "1.0.1"
 cw2 = "1.0.1"
 schemars = "0.8.10"
 serde = { version = "1.0.145", default-features = false, features = ["derive"] }
+classic-bindings = { version = "0.1.1", path = "../classic-bindings/packages/bindings"}
 thiserror = { version = "1.0.31" }
 
 [dev-dependencies]
