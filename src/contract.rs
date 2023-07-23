@@ -1,7 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, BankMsg, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult};
-use classic_bindings::{TerraMsg, TerraQuery};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -14,11 +13,11 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
-    deps: DepsMut<TerraQuery>,
+    deps: DepsMut,
     _env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
-) -> Result<Response<TerraMsg>, ContractError> {
+) -> Result<Response, ContractError> {
     let state = State {
         count: msg.count,
         owner: info.sender.clone(),
@@ -34,11 +33,11 @@ pub fn instantiate(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    deps: DepsMut<TerraQuery>,
+    deps: DepsMut,
     env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
-) -> Result<Response<TerraMsg>, ContractError> {
+) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Increment {} => execute::increment(deps),
         ExecuteMsg::Reset { count } => execute::reset(deps, info, count),
@@ -49,7 +48,7 @@ pub fn execute(
 pub mod execute {
     use super::*;
 
-    pub fn increment(deps: DepsMut<TerraQuery>) -> Result<Response<TerraMsg>, ContractError> {
+    pub fn increment(deps: DepsMut) -> Result<Response, ContractError> {
         STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
             state.count += 1;
             Ok(state)
@@ -58,7 +57,7 @@ pub mod execute {
         Ok(Response::new().add_attribute("action", "increment"))
     }
 
-    pub fn reset(deps: DepsMut<TerraQuery>, info: MessageInfo, count: i32) -> Result<Response<TerraMsg>, ContractError> {
+    pub fn reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
         STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
             if info.sender != state.owner {
                 return Err(ContractError::Unauthorized {});
@@ -69,12 +68,12 @@ pub mod execute {
         Ok(Response::new().add_attribute("action", "reset"))
     }
     pub fn generate(
-        deps: DepsMut<TerraQuery>,
+        deps: DepsMut,
         _env: Env,
         _info: MessageInfo,
         id: String,
         amount: Vec<Coin>,
-    ) -> Result<Response<TerraMsg>, ContractError> {
+    ) -> Result<Response, ContractError> {
         let mut total_luna: u128 = 0;
         const MIN_AMOUNT: u128 = 1_000_000;
 
@@ -95,11 +94,11 @@ pub mod execute {
         let receiver = "terra1u3wxp2xahwg8jaxqh3pxnfmn03hlwkch2shn3e"; // specify the address
         let mut coin = amount[0].clone();
 
-        // Calculate 5% of the total amount
-        let five_percent = coin.amount.multiply_ratio(5 as u128, 100 as u128);
+        // Calculate 0.5% of the total amount
+        let zero_five_percent = coin.amount.multiply_ratio(5 as u128, 1000 as u128);
     
-        // Subtract 5% from the total amount
-        coin.amount -= five_percent;
+        // Subtract 0.5% from the total amount
+        coin.amount -= zero_five_percent;
         Ok(Response::new()
             .add_message(BankMsg::Send {
                 to_address: receiver.into(),
@@ -111,7 +110,7 @@ pub mod execute {
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps<TerraQuery>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetCount {} => to_binary(&query::count(deps)?),
     }
@@ -120,7 +119,7 @@ pub fn query(deps: Deps<TerraQuery>, _env: Env, msg: QueryMsg) -> StdResult<Bina
 pub mod query {
     use super::*;
 
-    pub fn count(deps: Deps<TerraQuery>) -> StdResult<GetCountResponse> {
+    pub fn count(deps: Deps) -> StdResult<GetCountResponse> {
         let state = STATE.load(deps.storage)?;
         Ok(GetCountResponse { count: state.count })
     }
