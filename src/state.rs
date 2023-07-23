@@ -1,6 +1,6 @@
+use classic_bindings::{TerraMsg, TerraQuery};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use classic_bindings::{TerraMsg, TerraQuery};
 
 use cosmwasm_std::Addr;
 use cw_storage_plus::Item;

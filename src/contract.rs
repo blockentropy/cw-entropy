@@ -1,6 +1,9 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, BankMsg, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult};
+use cosmwasm_std::{
+    to_binary, BankMsg, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdError,
+    StdResult,
+};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -96,7 +99,7 @@ pub mod execute {
 
         // Calculate 0.5% of the total amount
         let zero_five_percent = coin.amount.multiply_ratio(5 as u128, 1000 as u128);
-    
+
         // Subtract 0.5% from the total amount
         coin.amount -= zero_five_percent;
         Ok(Response::new()
